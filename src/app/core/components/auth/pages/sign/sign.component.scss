@@ -1,0 +1,58 @@
+@import "../../../../../../../styles/colors.scss";
+
+:host {
+  form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &,
+    label,
+    input {
+      width: 100%;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 0.063rem solid var(--input);
+      margin-bottom: 1rem;
+
+      img {
+        width: 1.5rem;
+        margin-right: 0.5rem;
+      }
+
+      input {
+        height: 3.125rem;
+        border: none;
+        font-size: 1.125rem;
+        &::placeholder {
+          color: var(--input);
+        }
+      }
+    }
+    button {
+      font-size: 1rem;
+      width: 100%;
+      padding: 1.3rem;
+      background: none;
+      background-color: var(--button);
+      color: var(--white);
+      border: none;
+      border-radius: 0.313rem;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: no-drop;
+        background: darken(#cf0c0c, 20%);
+      }
+    }
+  }
+  span {
+    color: var(--error-text);
+    margin: 0.625rem;
+  }
+}
