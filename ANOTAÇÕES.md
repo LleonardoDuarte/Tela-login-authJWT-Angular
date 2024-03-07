@@ -905,4 +905,112 @@ canLoad: [CanloadGuard],
   const routes: Routes = [{ path: '', component: SignComponent }];
   const routes: Routes = [{ path: '', component: HomeComponent }];
 
-- 
+- Depois disso realizamos todas as estilizações das duas páginas.
+
+# Começo da lógica do projeto
+
+- Primeiro iremos importar o FormGroup dentro do module auth e o HttpClientModule dentro do nosso app module.
+
+- Agora no nosso sign component iremos criar uma variavel de validação para e email e a senha utilizando o formBuilder:
+
+<!-- Injeção de dependencia: -->
+
+constructor(private formBuilder: FormBuilder)
+
+<!-- Validador: -->
+
+public formAuth: FormGroup = this.formBuilder.group({
+email: ['', [Validators.required, Validators.email]],
+password: ['', [Validators.required]],
+});
+
+- Agora colocamos esta variavel como formGroup no nosso form e usar o formControlName para colocar nos inputs para puxar a validação do nosso formAuth:
+    <form [formGroup]="formAuth">
+    <input type="email" placeholder="Email" formControlName="email" />
+    <input type="password" placeholder="Password" />
+
+- Agora iremos colocar uma logica no botao para que se a validação do formAuth nao for feita o usuário nao poderá acessar o botao:
+  <button [disabled]="formAuth.invalid">Login</button>
+
+- Agora iremos criar um service para consumir nossa API para retornar o JWT para podermos usar no nosso submit do formulário:
+
+<!-- Consumo da api com post: -->
+
+      public sign(payLoad: { email: string; password: string }): Observable<any> {
+        return this.httpCliente.post(`${this.url}/sign`, payLoad).pipe(
+          map((res) => {
+            return console.log(res);
+          }),
+          catchError((e) => {
+            if (e.error.message) return throwError(() => e.error.message);
+
+            return throwError(
+              () =>
+                'No momento Não estamos conseguindo validar os dados, tenta novamente mais tarde.'
+            );
+          })
+        );
+      }
+
+- Depois criaremos a logica de envio de formulario criando um metodo de envio e colocando no nosso formulario:
+
+<!-- Método: -->
+
+      public submitForm() {
+        if (this.formAuth.valid) {
+          this.authService
+            .sign({
+              email: this.formAuth.value.email,
+              password: this.formAuth.value.password,
+            })
+            .subscribe({
+              next: (res) => res,
+              error: (e) => (this.msgError = e),
+            });
+        }
+      }
+
+<!-- Form: -->
+  <form [formGroup]="formAuth" (ngSubmit)="submitForm()">
+
+# armazenamento do token
+
+- Quando conseguimos um success em nossa requisição ela ira retornar um token JWT, esse token deve ser armazenado no nosso localStorage para requisições futuras, para isso vamos utilizar a seguinte lógica:
+
+       map((res) => {
+          localStorage.removeItem('access_token');
+          localStorage.setItem('access_token', res.token);
+          return console.log(res);
+        }),
+
+- Basicamente quando adicionamos esta implementação ao logar com sucesso nosso token já estará salvo no localStorage.
+
+# Proteção de rotas (guard)
+
+- Agora colocaremos a lógica para que o usuario nao possa acessar a url admin sem estar logado, Primeiro passo iremos criar o guard dentro da pasta core, o guard que usaremos é o canActiveChild já que estamos trabalhando com rotas filhas (ng g guard core/auth), apos isso iremos instalar a biblioteca auth0 que irá permitir fazermos a condição para que se o usuario nao estiver com token nao deixa-lo seguir para a página admin. (npm i @auth0/angular-jwt):
+
+      public isAuthenticated(): boolean {
+        const token = localStorage.getItem('access_token');
+
+        if (!token) {
+          return false;
+        }
+        const jwtHelper = new JwtHelperService();
+        return !jwtHelper.isTokenExpired(token);
+      }
+
+- Nesta logica acima usamos a biblioteca auth0 para identificar se o token está expirado, pois o token JWT tem prazo para expirar, se estiver expirado ele também nao irá deixar o mesmo acessar a página.
+
+- Agora dentro do nosso guard iremos criar um constructor para injetar nosso service e trazer a logica do nosso isAuthtenticated:
+
+  constructor(public router: Router, public authService: AuthService) {}
+
+            if (this.authService.isAuthenticated()) {
+            this.router.navigate(['']);
+            return false;
+          }
+          return true;
+
+
+- Por fim colocaremos na nossa rota o nosso guard:
+

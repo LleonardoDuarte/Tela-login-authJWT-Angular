@@ -1,0 +1,26 @@
+@import "../../../../../../styles/colors.scss";
+
+:host {
+  span {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--button);
+  }
+
+  button {
+    font-size: 1rem;
+    width: 100%;
+    padding: 1.3rem;
+    background: none;
+    background-color: var(--button);
+    color: var(--white);
+    border: none;
+    border-radius: 0.313rem;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: no-drop;
+      background: darken(#cf0c0c, 20%);
+    }
+  }
+}
